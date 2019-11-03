@@ -48,7 +48,6 @@ public class FindMaxEvents {
 				}
 			}
 		}
-		System.out.println(n-1);
 		return table[0][n-1];
 	}
 	
@@ -60,12 +59,12 @@ public class FindMaxEvents {
 		// Telescope starts at pos 0 (i.e. ptr)
 		int time = 0;
 		// First, we must check below and to the left. If 0, then we will be moving the telescope to the right. Else, left.
-		System.out.println(ptr);
 		boolean moveRight = (table[1][ptr - 1] == 0);
 		
 		// For time from 1 to n (going down the rows of the table)
 		// If the below or diagonal entry changes, then we can view the event at T, with coordinate T+1
 		// Zero-check is for when there's no longer an event in the same location
+		// --> O(n)
 		for (int i = 1; i < table.length; i++) {
 			if (moveRight) {
 				if (table[i][ptr] < table[i - 1][ptr] && table[i][ptr] != 0) {
