@@ -2,6 +2,7 @@ package astronomyDP19;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Main {
 
@@ -17,6 +18,14 @@ public class Main {
 		FindMaxEvents solver = new FindMaxEvents();
 		Integer maxEventsVisited = solver.dpSolution(eventCoordinates);
 		System.out.println(maxEventsVisited);
+		System.out.println("Events to visit in order:");
+		// input: 0 0 0 4 3 3 8 -1 6 8
+		// Expected output: [1, 2, 5, 10]
+		System.out.println(Arrays.toString(solver.solutionCoords().toArray()));
+		
+		// -- Other inputs --
+		// input: 1 -1 4 -3 5 8 9 -7 2 3 -10
+		// Expected output: [2, 4, 8, 11]
 	}
 
 }
