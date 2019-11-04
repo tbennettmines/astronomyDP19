@@ -48,9 +48,61 @@ public class FindMaxEvents {
 				}
 			}
 		}
+		
+		for (int i = 0; i < n; i++) {
+			System.out.print(String.format( "%3s", i + 1));
+			for (int j = 0; j < 2*n - 1; j++) {
+				System.out.print(String.format( "%3s", table[i][j]));
+			}
+			System.out.println("");
+		}
+		
 		return table[0][n-1];
 	}
 	
+	// Gets the maximum of an integer array
+	public int getMax(int[] array) {
+		int m = Integer.MIN_VALUE;
+		
+		for (int i = 0; i < array.length; i++) {
+		    if (array[i] > m) {
+		      m = array[i];
+		    }
+		}
+		return m;
+	}
+	
+	// Gets a list of the optimal times where events can be observed
+	public List<Integer> solutionCoords() {
+		List<Integer> coords = new ArrayList<>();
+		int n = table.length;
+		
+		// Uses last max and new max to distinguish between new maximum events
+		int lastMax = getMax(table[n - 1]);
+		int newMax;
+		
+		// The last event is always going to be observed at time n
+		coords.add(n);
+		
+		// Iterate up the table, and consider every row
+		for (int i = table.length - 2; i >= 0; i--) {
+			newMax = getMax(table[i]); // Get the maximum value of the current row
+			
+			// If the new maximum is greater than the last maximum, the event at the current row can be observed
+			if (newMax > lastMax) { 
+				coords.add(i + 1);
+			}
+			
+			lastMax = newMax;
+		}
+		
+		// Sort the list of times so they're in chronological order
+		Collections.sort(coords);
+		
+		return coords;
+	}
+	
+	/*
 	public List<Integer> solutionCoords() {
 		List<Integer> coords = new ArrayList<>();
 		
@@ -91,6 +143,7 @@ public class FindMaxEvents {
 		
 		return coords;
 	}
+	*/
 	
 	public List<Integer> findMovement(List<Integer> coords, List<Integer> eventCoordinates){
 		List<Integer> movement = new ArrayList<Integer>();
