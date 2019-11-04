@@ -14,7 +14,7 @@ public class FindMaxEvents {
 		}
 	}
 	
-	public Integer dpSolution(ArrayList<Integer> eventCoordinates) {
+	public Integer dpSolution(List<Integer> eventCoordinates) {
 		int n = eventCoordinates.size();
 		if (table == null)
 			table = new int[n][2*n - 1];
@@ -90,5 +90,27 @@ public class FindMaxEvents {
 		coords.add(table.length);
 		
 		return coords;
+	}
+	
+	public List<Integer> findMovement(List<Integer> coords, List<Integer> eventCoordinates){
+		List<Integer> movement = new ArrayList<Integer>();
+		for(int i = 0; i<coords.size()-1; i++) {
+			int time = coords.get(i+1)-coords.get(i);
+			int change = eventCoordinates.get(coords.get(i+1)-1)-eventCoordinates.get(coords.get(i)-1);
+			for (int j = 0; j<time; j++) {
+				if(change > 0) {
+					movement.add(1);
+					change = change - 1;
+				}
+				else if(change < 0) {
+					movement.add(-1);
+					change = change + 1;
+				}
+				else {
+					movement.add(0);
+				}
+			}
+		}
+		return movement;
 	}
 }
