@@ -5,8 +5,7 @@ import java.util.*;
 public class FindMaxEvents {
 	
 	int[][] table;
-	
-	public FindMaxEvents() {}
+	public List<Integer> eventCoordinates;
 	
 	public void printTable(int[][] table) {
 		for (int i = 0; i < table.length; i++) {
@@ -15,15 +14,17 @@ public class FindMaxEvents {
 	}
 	
 	public Integer dpSolution(List<Integer> eventCoordinates) {
+		this.eventCoordinates = eventCoordinates;
+		
 		int n = eventCoordinates.size();
 		if (table == null)
-			table = new int[n][2*n - 1];
+			table = new int[n+1][2*n + 1];
 		
 		// Populate table with 0s to indicate valid positions j at time i
 		// and -1's to indicate invalid positions
-		for(int i = 0; i < n; i++) {
-			for(int j = 0; j < 2*n - 1; j++) {
-				if(j >= n - 1 - i && j <= n - 1 + i) {
+		for(int i = 0; i < n+1; i++) {
+			for(int j = 0; j < 2*n + 1; j++) {
+				if(j >= n - i && j <= n + i) {
 					table[i][j] = 0;
 				}
 				else {
@@ -33,137 +34,102 @@ public class FindMaxEvents {
 		}
 		
 		// Set position d_n in the last row to 1
-		table[n - 1][eventCoordinates.get(n - 1) + n - 1] = 1;
+		table[n][eventCoordinates.get(n - 1) + n] = 1;
 		
 		// Iterate through and populate each element according to the maximum
 		// of the 3 immediate elements below the current row at the position
 		// and increment by 1 if the position is at d_i
-		for (int i = n - 2; i >= 0;i--) {
-			for (int j = n - 1 - i; j <= n - 1 + i; j++) {
+		for (int i = n - 1; i >= 1; i--) {
+			for (int j = n - i; j <= n + i; j++) {
 				
 				table[i][j] = Math.max(table[i+1][j-1], Math.max(table[i+1][j], table[i+1][j+1]) );
 				
-				if (j == eventCoordinates.get(i) + n - 1 && table[i][j] > 0) {
+				if (j == eventCoordinates.get(i - 1) + n && table[i][j] > 0) {
 					table[i][j] = table[i][j] + 1;
 				}
 			}
 		}
 		
-		for (int i = 0; i < n; i++) {
-			System.out.print(String.format( "%3s", i + 1));
-			for (int j = 0; j < 2*n - 1; j++) {
-				System.out.print(String.format( "%3s", table[i][j]));
-			}
-			System.out.println("");
-		}
+		table[0][n] = Math.max(table[1][n-1], Math.max(table[1][n], table[1][n+1]) );
 		
-		return table[0][n-1];
+		return table[0][n];
 	}
 	
-	// Gets the maximum of an integer array
-	public int getMax(int[] array) {
+	public int getMaxi(int[] array) {
 		int m = Integer.MIN_VALUE;
 		
 		for (int i = 0; i < array.length; i++) {
 		    if (array[i] > m) {
-		      m = array[i];
+		      m = i;
 		    }
 		}
 		return m;
 	}
-	
+
 	// Gets a list of the optimal times where events can be observed
-	public List<Integer> solutionCoords() {
-		List<Integer> coords = new ArrayList<>();
-		int n = table.length;
-		
-		// Uses last max and new max to distinguish between new maximum events
-		int lastMax = getMax(table[n - 1]);
-		int newMax;
-		
-		// The last event is always going to be observed at time n
-		coords.add(n);
-		
-		// Iterate up the table, and consider every row
-		for (int i = table.length - 2; i >= 0; i--) {
-			newMax = getMax(table[i]); // Get the maximum value of the current row
-			
-			// If the new maximum is greater than the last maximum, the event at the current row can be observed
-			if (newMax > lastMax) { 
-				coords.add(i + 1);
-			}
-			
-			lastMax = newMax;
-		}
+	public TracebackStep solutionCoords() {
+		TracebackStep step = getLargestSubset(0, table.length - 1, eventCoordinates);
 		
 		// Sort the list of times so they're in chronological order
-		Collections.sort(coords);
+		Collections.sort(step.coords);
+		Collections.reverse(step.movements);
 		
-		return coords;
+		return step;
 	}
 	
-	/*
-	public List<Integer> solutionCoords() {
-		List<Integer> coords = new ArrayList<>();
+	private TracebackStep getLargestSubset(int row, int col, List<Integer> eventCoords) {
+		TracebackStep step = new TracebackStep();
 		
-		// table.length = 2n - 1 --> table[0][ptr] yields starting point, time t = 0
-		int ptr = ((table[0].length + 1) / 2) - 1;
-		// Telescope starts at pos 0 (i.e. ptr)
-		int time = 0;
-		// First, we must check below and to the left. If 0, then we will be moving the telescope to the right. Else, left.
-		boolean moveRight = (table[1][ptr - 1] == 0);
-		
-		// For time from 1 to n (going down the rows of the table)
-		// If the below or diagonal entry changes, then we can view the event at T, with coordinate T+1
-		// Zero-check is for when there's no longer an event in the same location
-		// --> O(n)
-		for (int i = 1; i < table.length; i++) {
-			if (moveRight) {
-				if (table[i][ptr] < table[i - 1][ptr] && table[i][ptr] != 0) {
-					coords.add(i);
-					continue;
-				}
-				else if (table[i][ptr + 1] < table[i - 1][ptr]) {
-					coords.add(i);
-				}
-				ptr++;
-			}
-			else {
-				if (table[i][ptr] < table[i - 1][ptr] && table[i][ptr] != 0) {
-					coords.add(i);
-					continue;
-				}
-				else if (table[i][ptr - 1] < table[i - 1][ptr]) {
-					coords.add(i);
-				}
-				ptr--;
-			}
+		// If you are on the last row, return a step with the time of the last event
+		if (row == table.length - 1) {
+			step.coords.add(table.length - 1);
+			return step;
 		}
-		coords.add(table.length);
 		
-		return coords;
-	}
-	*/
-	
-	public List<Integer> findMovement(List<Integer> coords, List<Integer> eventCoordinates){
-		List<Integer> movement = new ArrayList<Integer>();
-		for(int i = 0; i<coords.size()-1; i++) {
-			int time = coords.get(i+1)-coords.get(i);
-			int change = eventCoordinates.get(coords.get(i+1)-1)-eventCoordinates.get(coords.get(i)-1);
-			for (int j = 0; j<time; j++) {
-				if(change > 0) {
-					movement.add(1);
-					change = change - 1;
-				}
-				else if(change < 0) {
-					movement.add(-1);
-					change = change + 1;
-				}
-				else {
-					movement.add(0);
-				}
-			}
+		// If the event occurs in the current column and row, add the event time
+		// (row) to the step
+		if (row != 0 && col == eventCoords.get(row - 1) + eventCoords.size()) {
+			step.coords.add(row);
 		}
-		return movement;
+		
+		TracebackStep leftStep, downStep, rightStep;
+		leftStep = new TracebackStep();
+		downStep = new TracebackStep();
+		rightStep = new TracebackStep();
+		
+		// Get step with largest subset of events from the left,
+		// right, and same column on the next row
+		if (col > 1 && table[row + 1][col - 1] != 0) {
+			leftStep = getLargestSubset(row + 1, col - 1, eventCoords);
+		}
+		if (table[row + 1][col] != 0) {
+			downStep = getLargestSubset(row + 1, col, eventCoords);
+		}
+		if (col < 2*table.length && table[row + 1][col + 1] != 0) {
+			rightStep = getLargestSubset(row + 1, col + 1, eventCoords);
+		}
+		
+		// Depending on which step has the larger subset of events,
+		// add the event times and movements to the current step
+		if (leftStep.coords.size() > downStep.coords.size() && 
+			leftStep.coords.size() > rightStep.coords.size()) {
+			step.coords.addAll(leftStep.coords);
+			step.movements = leftStep.movements;
+			step.movements.add("-1"); // Add -1 to movements, indicating a left movement
+		}
+		else if (downStep.coords.size() > leftStep.coords.size() && 
+				 downStep.coords.size() > rightStep.coords.size()) {
+				step.coords.addAll(downStep.coords);
+				step.movements = downStep.movements;
+				step.movements.add("0"); // Add 0 to movements, indicating no movement
+		}
+		else if (rightStep.coords.size() > leftStep.coords.size() && 
+				rightStep.coords.size() > downStep.coords.size()) {
+				step.coords.addAll(rightStep.coords);
+				step.movements = rightStep.movements;
+				step.movements.add("+1"); // Add +1 to movements, indicating a right movement
+		}
+		
+		return step;
 	}
 }

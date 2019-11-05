@@ -22,10 +22,9 @@ public class Main {
 		//System.out.println("Events to visit in order:");
 		// input: 0 0 0 4 3 3 8 -1 6 8
 		// Expected output: [1, 2, 5, 10]
-		List<Integer> events = solver.solutionCoords();
-		System.out.println(Arrays.toString(events.toArray()));
-		List<Integer> movement = solver.findMovement(events, eventCoordinates);
-		System.out.println(Arrays.toString(movement.toArray()));
+		TracebackStep step = solver.solutionCoords();
+		System.out.println(Arrays.toString(step.coords.toArray()));
+		System.out.println(Arrays.toString(step.movements.toArray()));
 		// -- Other inputs --
 		// input: 1 -1 4 -3 5 8 9 -7 2 3 -10
 		// Expected output: [2, 4, 8, 11]
